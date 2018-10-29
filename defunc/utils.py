@@ -1,20 +1,28 @@
 __all__ = ['exec_am',
-           'read_atm']
+           'read_atm',
+           'assert_isdarray']
 
 
 # standard library
 import io
 import os
 import re
+import sys
 from functools import wraps
 from pathlib import Path
 from subprocess import PIPE, run
 from logging import getLogger
 logger = getLogger(__name__)
 
+if 'ipykernel' in sys.modules:
+    from tqdm import tqdm_notebook as tqdm
+else:
+    from tqdm import tqdm
+
 
 # dependent packages
 import numpy as np
+import xarray as xr
 import pandas as pd
 import defunc as fn
 import astropy.units as u
@@ -24,6 +32,8 @@ import astropy.units as u
 DIR_DATA = Path(fn.__path__[0]) / 'data'
 DEFAULT_AMC = DIR_DATA / 'ALMA_annual_50.amc'
 DEFAULT_ATM = DIR_DATA / 'ALMA_atm_model.data'
+DARRAY_DIMS = set(('t', 'ch'))
+DARRAY_COORDS = set(('scanid', 'scantype', 'kidid', 'kidfq', 'kidtp'))
 
 
 def exec_am(*params, amc=None, timeout=None, encoding='utf-8'):
@@ -124,3 +134,12 @@ def read_atm(data=None, kind='tx'):
         return -np.log(df)
     else:
         raise ValueError("kind must be either 'tx' or 'tau'")
+
+
+def assert_isdarray(array):
+    """Check whether array is valid De:code array."""
+    message = 'Invalid De:code array'
+    assert isinstance(array, xr.DataArray), message
+    assert (set(array.dims) == DARRAY_DIMS), message
+    assert (set(array.coords) >= DARRAY_COORDS), message
+
