@@ -105,11 +105,13 @@ def read_atm(data=None, kind='tx'):
         df (pandas.DataFrame): DataFrame that stores data.
 
     """
+    # path of ATM model's data
     if data is None:
         path = DEFAULT_ATM
     else:
         path = Path(data).expanduser()
 
+    # return data as pandas.DataFrame
     df = pd.read_csv(path, sep='\s+', index_col=0, comment='#')
     df.columns = df.columns.astype(float)
     df.index.name = 'frequency (GHz)'
