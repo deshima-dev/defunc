@@ -1,4 +1,4 @@
-__all__ = ['rsky_calibration']
+__all__ = ['calibrate_arrays']
 
 
 # standard library
@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 # module constants
 
 
-def rsky_calibration(Pon, Poff, Pr, Tamb=273):
+def calibrate_arrays(Pon, Poff, Pr, Tamb=273.0):
     """Apply R-SKY intensity calibration to De:code arrays.
 
     Args:
@@ -44,7 +44,7 @@ def _calculate_Ton(Pon, Poff, Pr, Tamb):
     ton    = Pon.time.astype(float).values
     toff_f = Poff_f.time.astype(float).values
     toff_l = Poff_l.time.astype(float).values
-    toff   = np.array([toff_f.mean(), toff_l.mean()])
+    toff   = np.array([toff_f[-1], toff_l[0]])
     spec   = np.array([Poff_f.mean('t'), Poff_l.mean('t')])
 
     Poff_ip = interp1d(toff, spec, axis=0)(ton)
