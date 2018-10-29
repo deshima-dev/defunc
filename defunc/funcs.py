@@ -1,5 +1,6 @@
 __all__ = ['calibrate_arrays',
-           'estimate_baseline']
+           'estimate_baseline',
+           'estimate_commonmode']
 
 
 # standard library
@@ -14,6 +15,7 @@ import decode as dc
 import defunc as fn
 from scipy.interpolate import interp1d
 from sklearn.linear_model import LinearRegression
+from sklearn.decomposition import TruncatedSVD
 
 
 # module constants
@@ -100,3 +102,27 @@ def _calculate_dtau_dpwv(T):
     freq_ = df.columns.copy()
     coef_ = model.coef_.T[0]
     return interp1d(freq_, coef_)(freq)
+
+
+@fn.utils.apply_each_onref
+def estimate_commonmode(Ton, Toff):
+    """Estimate common-mode noises by PCA.
+
+    Args:
+        Ton (xarray.DataArray): Calibrated De:code array of ON point.
+        Toff (xarray.DataArray): Calibrated De:code array of OFF point.
+
+    Returns:
+        Tcom (xarray.DataArray): De:code array of estimated common-mode.
+
+    """
+    Xon  = fn.utils.normalize(Ton)
+    Xoff = fn.utils.normalize(Toff)
+
+    model = TruncatedSVD(n_components)
+    model.fit(Xoff)
+    P = model.components_
+    C = model.transform(Xon)
+
+    Xcom = dc.full_like(Xon, C@P)
+    return fn.utils.denormalize(Xcom)
