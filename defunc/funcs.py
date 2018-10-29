@@ -1,5 +1,5 @@
 __all__ = ['calibrate_arrays',
-           'subtract_baseline']
+           'estimate_baseline']
 
 
 # standard library
@@ -68,7 +68,7 @@ def _calculate_Toff(Poff, Pr, Tamb):
 
 @fn.utils.apply_each_scanid
 def estimate_baseline(Ton, Tamb=273.0):
-    """Subtract ultra-wideband baseline.
+    """Estimate ultra-wideband baseline.
 
     Args:
         Ton (xarray.DataArray): Calibrated De:code array of ON point.
