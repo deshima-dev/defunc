@@ -1,14 +1,19 @@
-__all__ = ['calibrate_arrays']
+__all__ = ['calibrate_arrays',
+           'subtract_baseline']
 
 
 # standard library
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 # dependent packages
 import numpy as np
 import xarray as xr
+import decode as dc
 import defunc as fn
 from scipy.interpolate import interp1d
+from sklearn.linear_model import LinearRegression
 
 
 # module constants
@@ -59,3 +64,39 @@ def _calculate_Toff(Poff, Pr, Tamb):
     Pr_0 = Pr.mean('t').values
 
     return Tamb * (Poff-Poff_0) / (Pr_0-Poff_0)
+
+
+@fn.utils.apply_each_scanid
+def estimate_baseline(Ton, Tamb=273.0):
+    """Subtract ultra-wideband baseline.
+
+    Args:
+        Ton (xarray.DataArray): Calibrated De:code array of ON point.
+        Tamb (float, optional): Ambient temperature used in calibration.
+
+    Returns:
+        Tbase (xarray.DataArray): De:code array of estimated baseline.
+
+    """
+    slope = _calculate_dtau_dpwv(Ton)
+    X = Tamb * slope[:, None]
+    y = Ton.values.T
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    return dc.full_like(Ton, X.T*model.coef_)
+
+
+def _calculate_dtau_dpwv(T):
+    freq = np.asarray(T.kidfq)
+
+    df = fn.utils.read_atm(kind='tau')
+    df = df.loc[freq.min()-0.1:freq.max()+0.1].T
+
+    model = LinearRegression()
+    model.fit(df.index[:,None], df)
+
+    freq_ = df.columns.copy()
+    coef_ = model.coef_.T[0]
+    return interp1d(freq_, coef_)(freq)
