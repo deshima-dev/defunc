@@ -40,7 +40,7 @@ def calibrate_arrays(Pon, Poff, Pr, Tamb=273.0):
     return Ton, Toff
 
 
-@fn.utils.apply_each_onref
+@fn.apply_each_onref
 def _calculate_Ton(Pon, Poff, Pr, Tamb):
     offids = np.unique(Poff.scanid)
     assert len(offids) == 2
@@ -60,7 +60,7 @@ def _calculate_Ton(Pon, Poff, Pr, Tamb):
     return Tamb * (Pon-Poff_ip) / (Pr_0-Poff_ip)
 
 
-@fn.utils.apply_each_scanid
+@fn.apply_each_scanid
 def _calculate_Toff(Poff, Pr, Tamb):
     Poff_0 = Poff.mean('t').values
     Pr_0 = Pr.mean('t').values
@@ -68,7 +68,7 @@ def _calculate_Toff(Poff, Pr, Tamb):
     return Tamb * (Poff-Poff_0) / (Pr_0-Poff_0)
 
 
-@fn.utils.apply_each_scanid
+@fn.apply_each_scanid
 def estimate_baseline(Ton, Tamb=273.0):
     """Estimate ultra-wideband baseline.
 
@@ -93,7 +93,7 @@ def estimate_baseline(Ton, Tamb=273.0):
 def _calculate_dtau_dpwv(T):
     freq = np.asarray(T.kidfq)
 
-    df = fn.utils.read_atm(kind='tau')
+    df = fn.read_atm(kind='tau')
     df = df.loc[freq.min()-0.1:freq.max()+0.1].T
 
     model = LinearRegression()
@@ -104,7 +104,7 @@ def _calculate_dtau_dpwv(T):
     return interp1d(freq_, coef_)(freq)
 
 
-@fn.utils.apply_each_onref
+@fn.apply_each_onref
 def estimate_commonmode(Ton, Toff):
     """Estimate common-mode noises by PCA.
 
@@ -116,8 +116,8 @@ def estimate_commonmode(Ton, Toff):
         Tcom (xarray.DataArray): De:code array of estimated common-mode.
 
     """
-    Xon  = fn.utils.normalize(Ton)
-    Xoff = fn.utils.normalize(Toff)
+    Xon  = fn.normalize(Ton)
+    Xoff = fn.normalize(Toff)
 
     model = TruncatedSVD(n_components)
     model.fit(Xoff)
@@ -125,4 +125,37 @@ def estimate_commonmode(Ton, Toff):
     C = model.transform(Xon)
 
     Xcom = dc.full_like(Xon, C@P)
-    return fn.utils.denormalize(Xcom)
+    return fn.denormalize(Xcom)
+
+
+def am_like(array, amc, kind='Tb', za='0 deg', Nscale_troposphere_h2o=1.0):
+    """Execute am according to frequency range of De:code's array.
+
+    Args:
+        array (xarray.DataArray):
+        amc (str or path):
+        kind (str):
+        za (str, optional):
+        Nscale_troposphere_h2o (float):
+
+    Returns:
+        model (xarray.DataArray):
+
+    """
+    assert set(array.dims) <= set(['t', 'ch'])
+    assert hasattr(array, 'kidfq')
+
+    kidfq = array.kidfq.values
+    order = np.argsort(kidfq)
+    f_min  = f'{kidfq.min()-1} GHz'
+    f_max  = f'{kidfq.max()+1} GHz'
+    f_step = f'{0.1*np.diff(kidfq[order]).min()} GHz'
+
+    params = [f_min, f_max, f_step, za, Nscale_troposphere_h2o]
+    df = fn.am(amc, *params)
+    freq = df['f'].squeeze().values
+    outp = df[kind].squeeze().values
+    func = interp1d(freq, outp, kind='linear')
+
+    return xr.DataArray(func(kidfq), dims=('ch',))
+
