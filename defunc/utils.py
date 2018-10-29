@@ -2,7 +2,7 @@ __all__ = ['exec_am',
            'read_atm',
            'assert_isdarray',
            'apply_each_scanid',
-           'apply_each_onoff']
+           'apply_each_onref']
 
 
 # standard library
@@ -177,12 +177,12 @@ def apply_each_scanid(func):
     return wrapper
 
 
-def apply_each_onoff(func):
-    """Decorator that applies function to ON and OFF subarrays of each scan."
+def apply_each_onref(func):
+    """Decorator that applies function to ON and REF subarrays of each scan."
 
     Args:
         func (function): Function to be wrapped. The first and second
-            arguments of it must be ON and OFF De:code arrays to be processed.
+            arguments of it must be ON and REF De:code arrays to be processed.
 
     Returns:
         wrapped (function): Wrapped function.
@@ -193,24 +193,24 @@ def apply_each_onoff(func):
         fn.utils.assert_isdarray(args[0])
         fn.utils.assert_isdarray(args[1])
 
-        Ton, Toff = args[:2]
+        Ton, Tref = args[:2]
         Tout = xr.zeros_like(Ton)
-        offids = np.unique(Toff.scanid)
+        refids = np.unique(Tref.scanid)
         onids  = np.unique(Ton.scanid)
 
         for onid in tqdm(onids):
-            index_l = np.searchsorted(offids, onid)
-            assert 0 <= index_l <= len(offids)
+            index_l = np.searchsorted(refids, onid)
+            assert 0 <= index_l <= len(refids)
 
-            offid_l = offids[index_l] # latter
-            offid_f = offids[index_l-1] # former
+            refid_l = refids[index_l] # latter
+            refid_f = refids[index_l-1] # former
             index_on  = (Ton.scanid == onid)
-            index_off = ((Toff.scanid == offid_f)
-                         | (Toff.scanid == offid_l))
+            index_ref = ((Tref.scanid == refid_f)
+                         | (Tref.scanid == refid_l))
 
             Ton_  = Ton[index_on]
-            Toff_ = Toff[index_off]
-            Tout_ = func(Ton_, Toff_, *args[2:], **kwargs)
+            Tref_ = Tref[index_ref]
+            Tout_ = func(Ton_, Tref_, *args[2:], **kwargs)
 
             assert Tout_.shape == Ton_.shape
             Tout[index_on] = Tout_
