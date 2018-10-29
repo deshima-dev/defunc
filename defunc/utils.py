@@ -1,6 +1,8 @@
 __all__ = ['exec_am',
            'read_atm',
-           'assert_isdarray']
+           'assert_isdarray',
+           'apply_each_scanid',
+           'apply_each_onoff']
 
 
 # standard library
@@ -142,3 +144,77 @@ def assert_isdarray(array):
     assert (set(array.dims) == DARRAY_DIMS), message
     assert (set(array.coords) >= DARRAY_COORDS), message
 
+
+def apply_each_scanid(func):
+    """Decorator that applies function to subarray of each scan ID."
+
+    Args:
+        func (function): Function to be wrapped. The first argument
+            of it must be an De:code array to be processed.
+
+    Returns:
+        wrapped (function): Wrapped function.
+
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        fn.utils.assert_isdarray(args[0])
+
+        Tin = args[0]
+        Tout = xr.zeros_like(Tin)
+        scanids = np.unique(Tin.scanid)
+
+        for id_ in tqdm(scanids):
+            index = (Tin.scanid == id_)
+            Tin_ = Tin[index]
+            Tout_ = func(Tin_, *args[1:], **kwargs)
+
+            assert Tout_.shape == Tin_.shape
+            Tout[index] = Tout_
+
+        return Tout
+
+    return wrapper
+
+
+def apply_each_onoff(func):
+    """Decorator that applies function to ON and OFF subarrays of each scan."
+
+    Args:
+        func (function): Function to be wrapped. The first and second
+            arguments of it must be ON and OFF De:code arrays to be processed.
+
+    Returns:
+        wrapped (function): Wrapped function.
+
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        fn.utils.assert_isdarray(args[0])
+        fn.utils.assert_isdarray(args[1])
+
+        Ton, Toff = args[:2]
+        Tout = xr.zeros_like(Ton)
+        offids = np.unique(Toff.scanid)
+        onids  = np.unique(Ton.scanid)
+
+        for onid in tqdm(onids):
+            index_l = np.searchsorted(offids, onid)
+            assert 0 <= index_l <= len(offids)
+
+            offid_l = offids[index_l] # latter
+            offid_f = offids[index_l-1] # former
+            index_on  = (Ton.scanid == onid)
+            index_off = ((Toff.scanid == offid_f)
+                         | (Toff.scanid == offid_l))
+
+            Ton_  = Ton[index_on]
+            Toff_ = Toff[index_off]
+            Tout_ = func(Ton_, Toff_, *args[2:], **kwargs)
+
+            assert Tout_.shape == Ton_.shape
+            Tout[index_on] = Tout_
+
+        return Tout
+
+    return wrapper
