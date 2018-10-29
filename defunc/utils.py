@@ -4,7 +4,8 @@ __all__ = ['exec_am',
            'apply_each_scanid',
            'apply_each_onref',
            'normalize',
-           'denormalize']
+           'denormalize',
+           'show_versions']
 
 
 # standard library
@@ -247,3 +248,24 @@ def denormalize(array):
     del denorm['mean_along_t']
     del denorm['std_along_t']
     return denorm
+
+
+def show_versions():
+    """Print versions of De:func's dependent packages."""
+    import decode
+    import defunc
+    import numpy
+    import scipy
+    import xarray
+    import astropy
+    import pandas
+    import sklearn
+    import tqdm
+    modules = locals()
+
+    n_pad = max(len(name) for name in modules)
+
+    for name, module in modules.items():
+        message = f'{name:<{n_pad}} - v{module.__version__}'
+        logger.info(message)
+        print(message)
