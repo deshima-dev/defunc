@@ -14,11 +14,6 @@ from subprocess import PIPE, run
 from logging import getLogger
 logger = getLogger(__name__)
 
-if 'ipykernel' in sys.modules:
-    from tqdm import tqdm_notebook as tqdm
-else:
-    from tqdm import tqdm
-
 
 # dependent packages
 import numpy as np
@@ -26,6 +21,10 @@ import xarray as xr
 import pandas as pd
 import defunc as fn
 import astropy.units as u
+if 'ipykernel' in sys.modules:
+    from tqdm import tqdm_notebook as tqdm
+else:
+    from tqdm import tqdm
 
 
 # module constants
