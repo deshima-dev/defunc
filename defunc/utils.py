@@ -2,7 +2,9 @@ __all__ = ['exec_am',
            'read_atm',
            'assert_isdarray',
            'apply_each_scanid',
-           'apply_each_onref']
+           'apply_each_onref',
+           'normalize',
+           'denormalize']
 
 
 # standard library
@@ -221,3 +223,27 @@ def apply_each_onref(func):
         return Tout
 
     return wrapper
+
+
+def normalize(array):
+    """Normalize De:code array to follow N(0, 1)."""
+    fn.utils.assert_isdarray(array)
+    mean = array.mean('t')
+    std  = array.std('t')
+
+    norm = (array-mean) / std
+    norm['mean_along_t'] = mean
+    norm['std_along_t']  = std
+    return norm
+
+
+def denormalize(array):
+    """Denormalize De:code array using stored mean and std."""
+    fn.utils.assert_isdarray(array)
+    mean = array['mean_along_t']
+    std  = array['std_along_t']
+
+    denorm = array*std + mean
+    del denorm['mean_along_t']
+    del denorm['std_along_t']
+    return denorm
