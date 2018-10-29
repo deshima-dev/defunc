@@ -14,6 +14,7 @@ from functools import wraps
 from pathlib import Path
 from subprocess import PIPE, run
 from logging import getLogger
+from warnings import catch_warnings, simplefilter
 logger = getLogger(__name__)
 
 
@@ -132,7 +133,9 @@ def read_atm(data=None, kind='tx'):
     if kind == 'tx':
         return df
     elif kind == 'tau':
-        return -np.log(df)
+        with catch_warnings():
+            simplefilter('ignore')
+            return -np.log(df)
     else:
         raise ValueError("kind must be either 'tx' or 'tau'")
 
