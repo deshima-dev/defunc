@@ -1,4 +1,4 @@
-__version__ = '2018.10.30.2'
+__version__ = '2018.10.30.3'
 
 
 from .utils import *
