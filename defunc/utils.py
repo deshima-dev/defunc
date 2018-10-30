@@ -5,7 +5,8 @@ __all__ = ['exec_am',
            'apply_each_onref',
            'normalize',
            'denormalize',
-           'show_versions']
+           'show_versions',
+           'import_packages']
 
 
 # standard library
@@ -18,6 +19,8 @@ from pathlib import Path
 from subprocess import PIPE, run
 from logging import getLogger
 from warnings import catch_warnings, simplefilter
+from inspect import stack
+from importlib import import_module
 logger = getLogger(__name__)
 
 
@@ -267,5 +270,38 @@ def show_versions():
 
     for name, module in modules.items():
         message = f'{name:<{n_pad}} - v{module.__version__}'
+        logger.info(message)
+        print(message)
+
+
+def import_packages(index='<module>'):
+    """Import frequently-used packages.
+
+    Note that this will execute the following codes
+    at current (I)Python REPL or an Jupyter Notebook::
+
+        >>> import numpy as np
+        >>> import xarray as xr
+        >>> import decode as dc
+        >>> import pandas as pd
+        >>> import matplotlib.pyplot as plt
+
+    """
+    packages = {'np': 'numpy',
+                'dc': 'decode',
+                'xr': 'xarray',
+                'pd': 'pandas',
+                'plt': 'matplotlib.pyplot'}
+
+    depth = [s.function for s in stack()].index(index)
+    f_globals = sys._getframe(depth).f_globals
+
+    for module, fullname in packages.items():
+        if fullname == module:
+            message = f'import {module}'
+        else:
+            message = f'import {fullname} as {module}'
+
+        f_globals[module] = import_module(fullname)
         logger.info(message)
         print(message)
