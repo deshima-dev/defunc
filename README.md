@@ -1,4 +1,4 @@
-# defunc
+# De:func
 :construction: Small package for De:code functions under development
 
 ## Installation
