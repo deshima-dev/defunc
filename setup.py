@@ -6,6 +6,7 @@ from setuptools import setup
 
 
 # module constants
+PACKAGES = ['defunc']
 DATADIRS = {'defunc': ['data/*']}
 REQUIRED = ['numpy',
             'scipy',
@@ -19,9 +20,10 @@ REQUIRED = ['numpy',
 
 setup(name='defunc',
       description=__doc__,
-      version='2018.10.30.4',
+      version='2018.10.30.5',
       author='DESHIMA software team',
       author_email='taniguchi@a.phys.nagoya-u.ac.jp',
       url='https://github.com/deshima-dev/defunc',
       install_requires=REQUIRED,
-      package_data=DATADIRS)
+      package_data=DATADIRS,
+      packages=PACKAGES)
