@@ -7,7 +7,8 @@ __all__ = ['exec_am',
            'denormalize',
            'show_versions',
            'import_packages',
-           'index_by_items']
+           'index_by_items',
+           'reallocate_scanid']
 
 
 # standard library
@@ -329,3 +330,33 @@ def index_by_items(array, *items):
 
     return mask
 
+
+def reallocate_scanid(array, t_divide=None):
+    """Reallocate scan ID of De:code array according to scan type.
+
+    Note that this will rewrite scan ID of the array in place.
+
+    Args
+        array (xarray.DataArray): Input array to be processed.
+        t_divide (int, optional): Minimum time interval in second.
+            If spacified, the function will allocate different scan ID
+            even if adjacent two samples have the same scan type.
+
+    Returns:
+        array (xarray.DataArray): Array whose scan ID is reallocated.
+
+    """
+    fn.assert_isdarray(array)
+
+    if t_divide is None:
+        t_divide = np.timedelta64(0, 's')
+    else:
+        t_divide = np.timedelta64(t_divide, 's')
+
+    time = array.time
+    scantype = array.scantype
+    cond1 = np.hstack([False, scantype[1:] != scantype[:-1]])
+    cond2 = np.hstack([False, np.abs(np.diff(time)) > t_divide])
+
+    array.scanid.values = np.cumsum(cond1 | cond2)
+    return array
