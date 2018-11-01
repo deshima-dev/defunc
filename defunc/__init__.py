@@ -1,5 +1,5 @@
-__version__ = '2018.10.30.5'
+__version__ = '2018.11.01.1'
 
 
 from .utils import *
-from .funcs import *
+from .models import *
