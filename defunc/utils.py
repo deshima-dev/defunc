@@ -275,7 +275,7 @@ def show_versions():
         print(message)
 
 
-def import_packages(index='<module>'):
+def import_packages(where='<module>'):
     """Import frequently-used packages.
 
     Note that this will execute the following codes
@@ -294,7 +294,7 @@ def import_packages(index='<module>'):
                 'pd': 'pandas',
                 'plt': 'matplotlib.pyplot'}
 
-    depth = [s.function for s in stack()].index(index)
+    depth = [s.function for s in stack()].index(where)
     f_globals = sys._getframe(depth).f_globals
 
     for module, fullname in packages.items():
