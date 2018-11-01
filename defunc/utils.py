@@ -6,7 +6,8 @@ __all__ = ['exec_am',
            'normalize',
            'denormalize',
            'show_versions',
-           'import_packages']
+           'import_packages',
+           'index_by_items']
 
 
 # standard library
@@ -305,3 +306,26 @@ def import_packages(index='<module>'):
         f_globals[module] = import_module(fullname)
         logger.info(message)
         print(message)
+
+
+def index_by_items(array, *items):
+    """Return boolean index of array matched by items.
+
+    Args:
+        array (numpy.ndarray): Array of items.
+        items (string): Items to match.
+
+    Returns:
+        boolean (numpy.ndarray): Boolean index that has the
+            same shape of `array`. Its True values are where
+            `items` are matched in the original `array`.
+
+    """
+    array = np.asarray(array)
+    mask = np.zeros_like(array, bool)
+
+    for item in items:
+        mask |= (array==item)
+
+    return mask
+
