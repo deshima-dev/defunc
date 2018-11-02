@@ -8,7 +8,7 @@ __all__ = ['exec_am',
            'show_versions',
            'import_packages',
            'reallocate_scanid',
-           'indexby_coord']
+           'indexby']
 
 
 # standard library
@@ -340,7 +340,7 @@ def reallocate_scanid(array, t_divide=None):
     return array
 
 
-def indexby_coord(array, *items, coord='scantype'):
+def indexby(array, *items, coord='scantype'):
     """Return boolean index of array coordinate matched by items.
 
     Args:
