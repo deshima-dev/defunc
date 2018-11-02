@@ -7,8 +7,8 @@ __all__ = ['exec_am',
            'denormalize',
            'show_versions',
            'import_packages',
-           'index_by_items',
-           'reallocate_scanid']
+           'reallocate_scanid',
+           'indexby_coord']
 
 
 # standard library
@@ -309,28 +309,6 @@ def import_packages(where='<module>'):
         print(message)
 
 
-def index_by_items(array, *items):
-    """Return boolean index of array matched by items.
-
-    Args:
-        array (numpy.ndarray): Array of items.
-        items (string): Items to match.
-
-    Returns:
-        boolean (numpy.ndarray): Boolean index that has the
-            same shape of `array`. Its True values are where
-            `items` are matched in the original `array`.
-
-    """
-    array = np.asarray(array)
-    mask = np.zeros_like(array, bool)
-
-    for item in items:
-        mask |= (array==item)
-
-    return mask
-
-
 def reallocate_scanid(array, t_divide=None):
     """Reallocate scan ID of De:code array according to scan type.
 
@@ -360,3 +338,26 @@ def reallocate_scanid(array, t_divide=None):
 
     array.scanid.values = np.cumsum(cond1 | cond2)
     return array
+
+
+def indexby_coord(array, *items, coord='scantype'):
+    """Return boolean index of array coordinate matched by items.
+
+    Args:
+        array (xarray.DataArray): Input array.
+        items (string): Item values of coordinate to be selected.
+        coord (string, optional): Name of coodinate to be used.
+            Default is 'scantype'.
+
+    Returns:
+        boolean (xarray.DataArray): Boolean array.
+
+    """
+    fn.assert_isdarray(array)
+    coord = array[coord]
+    index = xr.zeros_like(coord, bool)
+
+    for item in items:
+        index |= (coord==item)
+
+    return index
