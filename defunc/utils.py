@@ -309,7 +309,7 @@ def import_packages(where='<module>'):
         print(message)
 
 
-def reallocate_scanid(array, t_divide=None):
+def reallocate_scanid(array, t_divide=None, t_unit='s'):
     """Reallocate scan ID of De:code array according to scan type.
 
     Note that this will rewrite scan ID of the array in place.
@@ -318,25 +318,25 @@ def reallocate_scanid(array, t_divide=None):
         array (xarray.DataArray): Input array to be processed.
         t_divide (int, optional): Minimum time interval in second.
             If spacified, the function will allocate different scan ID
-            even if adjacent two samples have the same scan type.
+            to adjacent two samples with time interval greater than
+            `t_divide` even if they have the same scan type.
+        t_unit (str, optional): This determines the unit of `t_divide`.
 
     Returns:
         array (xarray.DataArray): Array whose scan ID is reallocated.
 
     """
     fn.assert_isdarray(array)
-
-    if t_divide is None:
-        t_divide = np.timedelta64(0, 's')
-    else:
-        t_divide = np.timedelta64(t_divide, 's')
-
     time = array.time
     scantype = array.scantype
-    cond1 = np.hstack([False, scantype[1:] != scantype[:-1]])
-    cond2 = np.hstack([False, np.abs(np.diff(time)) > t_divide])
 
-    array.scanid.values = np.cumsum(cond1 | cond2)
+    cond = np.hstack([False, scantype[1:] != scantype[:-1]])
+
+    if t_divide is not None:
+        t_delta = np.timedelta64(int(t_divide), t_unit)
+        cond |= np.hstack([False, np.abs(np.diff(time)) > t_delta])
+
+    array.scanid.values = np.cumsum(cond)
     return array
 
 
