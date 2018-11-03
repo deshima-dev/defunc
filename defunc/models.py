@@ -1,6 +1,7 @@
 __all__ = ['calibrate_arrays',
            'estimate_baseline',
-           'estimate_commonmode']
+           'estimate_commonmode',
+           'make_continuummap']
 
 
 # standard library
@@ -126,3 +127,23 @@ def estimate_commonmode(Ton, Toff):
 
     Xcom = dc.full_like(Xon, C@P)
     return fn.denormalize(Xcom)
+
+
+def make_continuummap(cube, weight=None):
+    """Make continuum map from cube.
+
+    Args:
+        cube (xarray.DataArray): De:code cube to be processed.
+        weight (xarray.DataArray, optional): Weight cube.
+            If not spacified, then `cube.noise**-2` is used.
+
+    Returns:
+        contmap (xarray.DataArray): Continuum map.
+
+    """
+    fn.assert_isdcube(cube)
+
+    if weight is None:
+        weight = cube.noise**-2
+
+    return (cube*weight).sum('ch') / weight.sum('ch')
