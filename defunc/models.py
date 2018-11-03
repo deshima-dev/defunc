@@ -126,36 +126,3 @@ def estimate_commonmode(Ton, Toff):
 
     Xcom = dc.full_like(Xon, C@P)
     return fn.denormalize(Xcom)
-
-
-def am_like(array, amc, kind='Tb', za='0 deg', Nscale_troposphere_h2o=1.0):
-    """Execute am according to frequency range of De:code's array.
-
-    Args:
-        array (xarray.DataArray):
-        amc (str or path):
-        kind (str):
-        za (str, optional):
-        Nscale_troposphere_h2o (float):
-
-    Returns:
-        model (xarray.DataArray):
-
-    """
-    assert set(array.dims) <= set(['t', 'ch'])
-    assert hasattr(array, 'kidfq')
-
-    kidfq = array.kidfq.values
-    order = np.argsort(kidfq)
-    f_min  = f'{kidfq.min()-1} GHz'
-    f_max  = f'{kidfq.max()+1} GHz'
-    f_step = f'{0.1*np.diff(kidfq[order]).min()} GHz'
-
-    params = [f_min, f_max, f_step, za, Nscale_troposphere_h2o]
-    df = fn.am(amc, *params)
-    freq = df['f'].squeeze().values
-    outp = df[kind].squeeze().values
-    func = interp1d(freq, outp, kind='linear')
-
-    return xr.DataArray(func(kidfq), dims=('ch',))
-
