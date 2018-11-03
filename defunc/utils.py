@@ -1,6 +1,7 @@
 __all__ = ['exec_am',
            'read_atm',
            'assert_isdarray',
+           'assert_isdcube',
            'apply_each_scanid',
            'apply_each_onref',
            'normalize',
@@ -44,6 +45,8 @@ DEFAULT_AMC = DIR_DATA / 'ALMA_annual_50.amc'
 DEFAULT_ATM = DIR_DATA / 'ALMA_atm_model.data'
 DARRAY_DIMS = set(('t', 'ch'))
 DARRAY_COORDS = set(('scanid', 'scantype', 'kidid', 'kidfq', 'kidtp'))
+DCUBE_DIMS = set(('x', 'y', 'ch'))
+DCUBE_COORDS = set(('noise', 'coordsys', 'kidid', 'kidfq', 'kidtp'))
 
 
 def exec_am(*params, amc=None, timeout=None, encoding='utf-8'):
@@ -154,6 +157,14 @@ def assert_isdarray(array):
     assert isinstance(array, xr.DataArray), message
     assert (set(array.dims) == DARRAY_DIMS), message
     assert (set(array.coords) >= DARRAY_COORDS), message
+
+
+def assert_isdcube(cube):
+    """Check whether array is valid De:code cube."""
+    message = 'Invalid De:code cube'
+    assert isinstance(cube, xr.DataArray), message
+    assert (set(cube.dims) == DCUBE_DIMS), message
+    assert (set(cube.coords) >= DCUBE_COORDS), message
 
 
 def apply_each_scanid(func):
