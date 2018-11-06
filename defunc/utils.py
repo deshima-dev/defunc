@@ -168,7 +168,7 @@ def assert_isdcube(cube):
 
 
 def apply_each_scanid(func):
-    """Decorator that applies function to subarray of each scan ID."
+    """Decorator that applies function to subarray of each scan ID.
 
     Args:
         func (function): Function to be wrapped. The first argument
@@ -200,7 +200,7 @@ def apply_each_scanid(func):
 
 
 def apply_each_onref(func):
-    """Decorator that applies function to ON and REF subarrays of each scan."
+    """Decorator that applies function to ON and REF subarrays of each scan.
 
     Args:
         func (function): Function to be wrapped. The first and second
