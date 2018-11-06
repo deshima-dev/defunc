@@ -9,7 +9,8 @@ __all__ = ['exec_am',
            'show_versions',
            'import_packages',
            'reallocate_scanid',
-           'indexby']
+           'indexby',
+           'show_funclist']
 
 
 # standard library
@@ -372,3 +373,33 @@ def indexby(array, *items, coord='scantype'):
         index |= (coord==item)
 
     return index
+
+
+def show_funclist(kind='list'):
+    """Print summary of De:func's functions as Markdown list or table.
+
+    Args:
+        kind (str, optional): Type of Markdown output strings.
+            Must be either 'list' or 'table'. Default is 'list'.
+
+    """
+    if kind == 'table':
+        print('| Function | Abstract |')
+        print('| --- | --- |')
+
+    for name in dir(fn):
+        if name.startswith('__'):
+            continue
+
+        func = getattr(fn, name)
+        if func.__doc__ is None:
+            continue
+
+        abst = func.__doc__.split('\n')[0]
+
+        if kind == 'list':
+            print(f'+ **{name}**: {abst}')
+        elif kind == 'table':
+            print(f'| {name} | {abst} |')
+        else:
+            raise ValueError(kind)
