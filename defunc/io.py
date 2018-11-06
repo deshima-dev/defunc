@@ -10,6 +10,7 @@ from pkgutil import get_data
 import yaml
 import numpy as np
 import decode as dc
+import defunc as fn
 from astropy.io import fits
 
 
@@ -17,7 +18,7 @@ def tofits(cube, fitsname, header=None, **kwargs):
     """Save cube as a FITS.
 
     Note that this functions is only available when
-    saving 3D cube from timestream of DESHIMA 1.0.
+    saving 3D cube made of timestream of DESHIMA 1.0.
     Also note that the third axis of the fits is not
     KID frequency but KID ID for using it in De:plot.
 
