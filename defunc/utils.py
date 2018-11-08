@@ -2,8 +2,8 @@ __all__ = ['exec_am',
            'read_atm',
            'assert_isdarray',
            'assert_isdcube',
-           'apply_each_scanid',
-           'apply_each_onref',
+           'foreach_scanid',
+           'foreach_onref',
            'normalize',
            'denormalize',
            'show_versions',
@@ -168,7 +168,7 @@ def assert_isdcube(cube):
     assert (set(cube.coords) >= DCUBE_COORDS), message
 
 
-def apply_each_scanid(func):
+def foreach_scanid(func):
     """Decorator that applies function to subarray of each scan ID.
 
     Args:
@@ -200,7 +200,7 @@ def apply_each_scanid(func):
     return wrapper
 
 
-def apply_each_onref(func):
+def foreach_onref(func):
     """Decorator that applies function to ON and REF subarrays of each scan.
 
     Args:

@@ -41,7 +41,7 @@ def calibrate_arrays(Pon, Poff, Pr, Tamb=273.0):
     return Ton, Toff
 
 
-@fn.apply_each_onref
+@fn.foreach_onref
 def _calculate_Ton(Pon, Poff, Pr, Tamb):
     offids = np.unique(Poff.scanid)
     assert len(offids) == 2
@@ -61,7 +61,7 @@ def _calculate_Ton(Pon, Poff, Pr, Tamb):
     return Tamb * (Pon-Poff_ip) / (Pr_0-Poff_ip)
 
 
-@fn.apply_each_scanid
+@fn.foreach_scanid
 def _calculate_Toff(Poff, Pr, Tamb):
     Poff_0 = Poff.mean('t').values
     Pr_0 = Pr.mean('t').values
@@ -69,7 +69,7 @@ def _calculate_Toff(Poff, Pr, Tamb):
     return Tamb * (Poff-Poff_0) / (Pr_0-Poff_0)
 
 
-@fn.apply_each_scanid
+@fn.foreach_scanid
 def estimate_baseline(Ton, Tamb=273.0):
     """Estimate ultra-wideband baseline.
 
@@ -105,7 +105,7 @@ def _calculate_dtau_dpwv(T):
     return interp1d(freq_, coef_)(freq)
 
 
-@fn.apply_each_onref
+@fn.foreach_onref
 def estimate_commonmode(Ton, Toff):
     """Estimate common-mode noises by PCA.
 
