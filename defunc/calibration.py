@@ -25,10 +25,10 @@ def recompose_darray(array, scantype_on, scantype_off, scantype_r):
         scantype_r (list of str): Scantype(s) allocated to R data.
 
     Returns:
-        Pon (xarray.DataArray):
-        Poff (xarray.DataArray):
-        Pr_on (xarray.DataArray):
-        Pr_off (xarray.DataArray):
+        Pon (xarray.DataArray): De:code array of ON data with new scan ID.
+        Poff (xarray.DataArray): De:code array of OFF data with new scan ID.
+        Pr_on (xarray.DataArray): De:code array of R data interpolated to `Pon`.
+        Pr_off (xarray.DataArray): De:code array of R data interpolated to `Poff`.
 
     """
     # step 1
