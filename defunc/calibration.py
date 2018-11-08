@@ -1,5 +1,6 @@
 __all__ = ['indexby',
-           'reallocate_scanid']
+           'reallocate_scanid',
+           'recompose_darray']
 
 
 # standard library
@@ -10,7 +11,47 @@ logger = getLogger(__name__)
 # dependent packages
 import numpy as np
 import xarray as xr
+import decode as dc
 import defunc as fn
+
+
+def recompose_darray(array, scantype_on, scantype_off, scantype_r):
+    """Recompose De:code array to make ON, OFF, and R arrays.
+
+    Args:
+        array (xarray.DataArray): Input array to be processed.
+        scantype_on (list of str): Scantype(s) allocated to ON data.
+        scantype_off (list of str): Scantype(s) allocated to OFF data.
+        scantype_r (list of str): Scantype(s) allocated to R data.
+
+    Returns:
+        Pon (xarray.DataArray):
+        Poff (xarray.DataArray):
+        Pr_on (xarray.DataArray):
+        Pr_off (xarray.DataArray):
+
+    """
+    # step 1
+    Psky = array[fn.indexby(array, *scantype_on, *scantype_off)]
+    Pr   = array[fn.indexby(array, *scantype_r)]
+
+    # step 2
+    Prip = _interpolate_Pr(Psky, Pr)
+    Psky = fn.reallocate_scanid(Psky)
+    Prip.scanid[:] = Psky.scanid
+
+    # step 3
+    Pon  = Psky[fn.indexby(Psky, *scantype_on)]
+    Poff = Psky[fn.indexby(Psky, *scantype_off)]
+    Pr_on  = Prip[fn.indexby(Prip, *scantype_on)]
+    Pr_off = Prip[fn.indexby(Prip, *scantype_off)]
+
+    return Pon, Poff, Pr_on, Pr_off
+
+
+@fn.foreach_onref
+def _interpolate_Pr(Psky, Pr):
+    return dc.full_like(Psky, Pr.mean('t'))
 
 
 def reallocate_scanid(array, t_divide=None, t_unit='s'):
