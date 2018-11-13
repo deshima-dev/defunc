@@ -23,6 +23,7 @@ from logging import getLogger
 from warnings import catch_warnings, simplefilter
 from inspect import stack
 from importlib import import_module
+from types import ModuleType
 logger = getLogger(__name__)
 
 
@@ -338,14 +339,18 @@ def show_funclist(kind='list'):
         print('| --- | --- |')
 
     for name in dir(fn):
+        attr = getattr(fn, name)
+
+        if attr.__doc__ is None:
+            continue
+
+        if isinstance(attr, ModuleType):
+            continue
+
         if name.startswith('__'):
             continue
 
-        func = getattr(fn, name)
-        if func.__doc__ is None:
-            continue
-
-        abst = func.__doc__.split('\n')[0]
+        abst = attr.__doc__.split('\n')[0]
 
         if kind == 'list':
             print(f'+ **{name}**: {abst}')
