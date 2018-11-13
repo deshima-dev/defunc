@@ -1,6 +1,7 @@
 __all__ = ['indexby',
            'reallocate_scanid',
-           'recompose_darray']
+           'recompose_darray',
+           'calibrate_intensity']
 
 
 # standard library
@@ -13,6 +14,7 @@ import numpy as np
 import xarray as xr
 import decode as dc
 import defunc as fn
+from scipy.interpolate import interp1d
 
 
 def recompose_darray(array, scantype_on, scantype_off, scantype_r):
@@ -54,6 +56,62 @@ def recompose_darray(array, scantype_on, scantype_off, scantype_r):
 @fn.foreach_onref
 def _interpolate_Pr(Psky, Pr):
     return dc.full_like(Psky, Pr.mean('t'))
+
+
+def calibrate_intensity(Pon, Poff, Pr_on, Pr_off, Tamb=273.0):
+    """Conduct R-SKY intensity calibration to De:code arrays.
+
+    This function aims to be used with `fn.recompose_darray`
+    (i.e., parameters of this function should be returns of it).
+
+    Args:
+        Pon (xarray.DataArray): De:code array of ON data.
+        Poff (xarray.DataArray): De:code array of OFF data.
+        Pr_on (xarray.DataArray): De:code array of R data interpolated to `Pon`.
+        Pr_off (xarray.DataArray): De:code array of R data interpolated to `Poff`.
+
+    Returns:
+        Ton (xarray.DataArray): Calibrated De:code array of ON point.
+        Toff (xarray.DataArray): Calibrated De:code array of OFF point.
+
+    """
+    Ton  = _calculate_Ton(Pon, Poff, Pr_on, Tamb)
+    Toff = _calculate_Toff(Poff, Pr_off, Tamb)
+
+    return Ton, Toff
+
+
+def _calculate_Ton(Pon, Poff, Pr_on, Tamb):
+    @fn.foreach_onref
+    def calculate_dP(Pon_or_r, Poff):
+        offids = np.unique(Poff.scanid)
+        assert len(offids) == 2
+
+        Poff_f = Poff[Poff.scanid == offids[0]] # former
+        Poff_l = Poff[Poff.scanid == offids[1]] # latter
+
+        ton_or_r = Pon_or_r.time.astype(float).values
+        toff_f = Poff_f.time.astype(float).values
+        toff_l = Poff_l.time.astype(float).values
+        toff = np.array([toff_f.mean(), toff_l.mean()])
+        spec = np.array([Poff_f.mean('t'), Poff_l.mean('t')])
+
+        Poff_ip = interp1d(toff, spec, axis=0)(ton_or_r)
+        return Pon_or_r - Poff_ip
+
+    dPon_off = calculate_dP(Pon, Poff)
+    dPr_off  = calculate_dP(Pr_on, Poff)
+    return Tamb * dPon_off / dPr_off
+
+
+def _calculate_Toff(Poff, Pr_off, Tamb):
+    @fn.foreach_scanid
+    def calculate_dP(Poff):
+        return Poff - Poff.mean('t')
+
+    dPoff = calculate_dP(Poff)
+    dPr_off = Pr_off - Poff
+    return Tamb * dPoff / dPr_off
 
 
 def reallocate_scanid(array, t_divide=None, t_unit='s'):
