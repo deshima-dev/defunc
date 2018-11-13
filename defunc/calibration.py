@@ -20,9 +20,9 @@ def recompose_darray(array, scantype_on, scantype_off, scantype_r):
 
     Args:
         array (xarray.DataArray): Input array to be processed.
-        scantype_on (list of str): Scantype(s) allocated to ON data.
-        scantype_off (list of str): Scantype(s) allocated to OFF data.
-        scantype_r (list of str): Scantype(s) allocated to R data.
+        scantype_on (str): Scantype allocated to ON data.
+        scantype_off (str): Scantype allocated to OFF data.
+        scantype_r (str): Scantype allocated to R data.
 
     Returns:
         Pon (xarray.DataArray): De:code array of ON data with new scan ID.
@@ -32,8 +32,8 @@ def recompose_darray(array, scantype_on, scantype_off, scantype_r):
 
     """
     # step 1
-    Psky = array[fn.indexby(array, *scantype_on, *scantype_off)]
-    Pr   = array[fn.indexby(array, *scantype_r)]
+    Psky = array[fn.indexby(array, scantype_on, scantype_off)]
+    Pr   = array[fn.indexby(array, scantype_r)]
 
     # step 2
     Prip = _interpolate_Pr(Psky, Pr)
@@ -41,10 +41,12 @@ def recompose_darray(array, scantype_on, scantype_off, scantype_r):
     Prip.scanid[:] = Psky.scanid
 
     # step 3
-    Pon  = Psky[fn.indexby(Psky, *scantype_on)]
-    Poff = Psky[fn.indexby(Psky, *scantype_off)]
-    Pr_on  = Prip[fn.indexby(Prip, *scantype_on)]
-    Pr_off = Prip[fn.indexby(Prip, *scantype_off)]
+    Pon  = Psky[fn.indexby(Psky, scantype_on)]
+    Poff = Psky[fn.indexby(Psky, scantype_off)]
+    Pr_on  = Prip[fn.indexby(Prip, scantype_on)]
+    Pr_off = Prip[fn.indexby(Prip, scantype_off)]
+    Pr_on.scantype[:]  = scantype_r
+    Pr_off.scantype[:] = scantype_r
 
     return Pon, Poff, Pr_on, Pr_off
 
