@@ -38,7 +38,11 @@ def recompose_darray(array, scantype_on, scantype_off, scantype_r):
     Pr   = array[fn.indexby(array, scantype_r)]
 
     # step 2
-    Prip = _interpolate_Pr(Psky, Pr)
+    @fn.foreach_onref
+    def interpolate_Pr(Psky, Pr):
+        return dc.full_like(Psky, Pr.mean('t'))
+
+    Prip = interpolate_Pr(Psky, Pr)
     Psky = fn.reallocate_scanid(Psky)
     Prip.scanid[:] = Psky.scanid
 
@@ -51,11 +55,6 @@ def recompose_darray(array, scantype_on, scantype_off, scantype_r):
     Pr_off.scantype[:] = scantype_r
 
     return Pon, Poff, Pr_on, Pr_off
-
-
-@fn.foreach_onref
-def _interpolate_Pr(Psky, Pr):
-    return dc.full_like(Psky, Pr.mean('t'))
 
 
 def calibrate_intensity(Pon, Poff, Pr_on, Pr_off, Tamb=273.0):
