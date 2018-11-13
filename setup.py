@@ -20,7 +20,7 @@ REQUIRED = ['numpy',
 
 setup(name='defunc',
       description=__doc__,
-      version='2018.11.06.2',
+      version='2018.11.13.1',
       author='DESHIMA software team',
       author_email='taniguchi@a.phys.nagoya-u.ac.jp',
       url='https://github.com/deshima-dev/defunc',
