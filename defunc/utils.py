@@ -220,14 +220,20 @@ def foreach_onref(func):
         onids  = np.unique(Ton.scanid)
 
         for onid in tqdm(onids):
-            index_l = np.searchsorted(refids, onid)
-            assert 0 <= index_l <= len(refids)
+            # _f denotes former REF (before ON)
+            # _l denotes latter REF (after ON)
+            index = np.searchsorted(refids, onid)
 
-            refid_l = refids[index_l] # latter
-            refid_f = refids[index_l-1] # former
+            if index == 0:
+                index_f = index_l = 0
+            elif index == len(refids):
+                index_f = index_l = len(refids)-1
+            else:
+                index_f, index_l = index-1, index
+
             index_on  = (Ton.scanid == onid)
-            index_ref = ((Tref.scanid == refid_f)
-                         | (Tref.scanid == refid_l))
+            index_ref = ((Tref.scanid == refids[index_f])
+                         | (Tref.scanid == refids[index_l]))
 
             Ton_  = Ton[index_on]
             Tref_ = Tref[index_ref]
