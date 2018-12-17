@@ -69,13 +69,15 @@ def _calculate_Toff(Poff, Pr, Tamb):
     return Tamb * (Poff-Poff_0) / (Pr_0-Poff_0)
 
 
-@fn.foreach_scanid
-def estimate_baseline(Ton, Tamb=273.0):
+def estimate_baseline(Ton, Tamb=273.0, weight=None, **kwargs):
     """Estimate ultra-wideband baseline.
 
     Args:
         Ton (xarray.DataArray): Calibrated De:code array of ON point.
         Tamb (float, optional): Ambient temperature used in calibration.
+        weight (array, int, or float, optional): 1D weight array along ch axis.
+            If it is a number, then slope**<number> is used instead.
+        kwargs (dict, optional): Keyword arguments for model initialization.
 
     Returns:
         Tbase (xarray.DataArray): De:code array of estimated baseline.
@@ -85,10 +87,20 @@ def estimate_baseline(Ton, Tamb=273.0):
     X = Tamb * slope[:, None]
     y = Ton.values.T
 
-    model = LinearRegression()
-    model.fit(X, y)
+    if weight is None:
+        weight = np.ones_like(slope)
+    elif isinstance(weight, (int, float)):
+        weight = slope**weight
 
-    return dc.full_like(Ton, X.T*model.coef_)
+    model = LinearRegression(**kwargs)
+    model.fit(X, y, sample_weight=weight)
+
+    Tbase = dc.full_like(Ton, X.T*model.coef_)
+    Tbase.attrs['model'] = model
+    Tbase.attrs['X'] = X
+    Tbase.attrs['y'] = y
+    Tbase.attrs['weight'] = weight
+    return Tbase
 
 
 def _calculate_dtau_dpwv(T):
