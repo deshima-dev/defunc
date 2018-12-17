@@ -1,0 +1,34 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+jupyter = "*"
+
+[packages]
+defunc = "*"
+numpy = "*"
+scipy = "*"
+astropy = "*"
+xarray = "*"
+pandas = "*"
+matplotlib = "*"
+scikit-learn = "*"
+tqdm = "*"
+pyyaml = "*"
+aplpy = "*"
+pyregion = "*"
+decode = "*"
+fmflow = "*"
+jupyterlab = "*"
+dask = {extras = ["complete"],version = "*"}
+
+[requires]
+python_version = "3.6"
+
+[scripts]
+ipython = "ipython"
+jupyter = "jupyter notebook ~/"
+configure = "etc/configure"
