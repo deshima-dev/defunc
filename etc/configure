@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# Write an environment variable
-export IPYTHONDIR=.ipython
-echo 'IPYTHONDIR=.ipython' >> .env
+# Write environment variables to .env
+PYTHONPATH=`pwd`
+IPYTHONDIR=`pwd`/.ipython
+echo "PYTHONPATH=${PYTHONPATH}" >> .env
+echo "IPYTHONDIR=${IPYTHONDIR}" >> .env
 
 # Create IPython profile
+export IPYTHONDIR=${IPYTHONDIR}
 mkdir -p .ipython
 ipython profile create default
 
