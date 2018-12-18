@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 ipython = "*"
 jupyter = "*"
+twine = "*"
 
 [packages]
 numpy = "*"
@@ -29,5 +30,6 @@ python_version = "3.6"
 
 [scripts]
 ipython = "ipython"
-jupyter = "jupyter notebook ${HOME}"
+jupyter = "jupyter lab ${HOME}"
 configure = "etc/configure"
+distribute = "etc/distribute"
