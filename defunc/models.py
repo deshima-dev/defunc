@@ -15,6 +15,7 @@ import xarray as xr
 import decode as dc
 import defunc as fn
 from scipy.interpolate import interp1d
+from sklearn import linear_model
 from sklearn.linear_model import LinearRegression
 from sklearn.decomposition import TruncatedSVD
 
@@ -69,7 +70,8 @@ def _calculate_Toff(Poff, Pr, Tamb):
     return Tamb * (Poff-Poff_0) / (Pr_0-Poff_0)
 
 
-def estimate_baseline(Ton, Tamb=273.0, weight=None, **kwargs):
+def estimate_baseline(Ton, Tamb=273.0, weight=None,
+                      model='LinearRegression', **kwargs):
     """Estimate ultra-wideband baseline.
 
     Args:
@@ -77,6 +79,9 @@ def estimate_baseline(Ton, Tamb=273.0, weight=None, **kwargs):
         Tamb (float, optional): Ambient temperature used in calibration.
         weight (array, int, or float, optional): 1D weight array along ch axis.
             If it is a number, then slope**<number> is used instead.
+            It is only for `model` = 'LinearRegression' or 'Ridge' (ignored otherwise).
+        model (str, optional): Model name of `sklearn.linear_model`.
+            Default is 'LinearRegression' (least squares linear regression).
         kwargs (dict, optional): Keyword arguments for model initialization.
 
     Returns:
@@ -91,9 +96,16 @@ def estimate_baseline(Ton, Tamb=273.0, weight=None, **kwargs):
         weight = np.ones_like(slope)
     elif isinstance(weight, (int, float)):
         weight = slope**weight
+    else:
+        weight = np.asarray(weight)
+        assert weight.shape == slope.shape
 
-    model = LinearRegression(**kwargs)
-    model.fit(X, y, sample_weight=weight)
+    if model in ['LinearRegression', 'Ridge']:
+        model = getattr(linear_model, model)(**kwargs)
+        model.fit(X, y, sample_weight=weight)
+    else:
+        model = getattr(linear_model, model)(**kwargs)
+        model.fit(X, y)
 
     Tbase = dc.full_like(Ton, X.T*model.coef_)
     Tbase.attrs['model'] = model
