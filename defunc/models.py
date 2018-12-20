@@ -70,16 +70,20 @@ def _calculate_Toff(Poff, Pr, Tamb):
     return Tamb * (Poff-Poff_0) / (Pr_0-Poff_0)
 
 
-def estimate_baseline(Ton, Tamb=273.0, weight=None,
+def estimate_baseline(Ton, Tamb=273.0, order=0, weight=None,
                       model='LinearRegression', **kwargs):
     """Estimate ultra-wideband baseline.
 
     Args:
         Ton (xarray.DataArray): Calibrated De:code array of ON point.
         Tamb (float, optional): Ambient temperature used in calibration.
-        weight (array, int, or float, optional): 1D weight array along ch axis.
+        order (int, optional): Maximum order of a polynomial function
+            which is assumed to represent a continuum emission spectrum.
+            Default is 0 (flat continuum emission).
+        weight (array, int, or float, optional): 1D weight along ch axis.
             If it is a number, then slope**<number> is used instead.
-            It is only for `model` = 'LinearRegression' or 'Ridge' (ignored otherwise).
+            It is only for `model` = 'LinearRegression' or 'Ridge'
+            (ignored otherwise). Default is None (uniform weight).
         model (str, optional): Model name of `sklearn.linear_model`.
             Default is 'LinearRegression' (least squares linear regression).
         kwargs (dict, optional): Keyword arguments for model initialization.
@@ -88,8 +92,14 @@ def estimate_baseline(Ton, Tamb=273.0, weight=None,
         Tbase (xarray.DataArray): De:code array of estimated baseline.
 
     """
-    slope = _calculate_dtau_dpwv(Ton)
-    X = Tamb * slope[:, None]
+    freq = np.asarray(Ton.kidfq)
+    slope = _calculate_dtau_dpwv(freq)
+
+    X = np.zeros([len(freq), order+1])
+    X[:, -1] = Tamb*slope
+    for i in range(order):
+        X[:, i] = freq**(i+1)
+
     y = Ton.values.T
 
     if weight is None:
@@ -98,7 +108,6 @@ def estimate_baseline(Ton, Tamb=273.0, weight=None,
         weight = slope**weight
     else:
         weight = np.asarray(weight)
-        assert weight.shape == slope.shape
 
     if model in ['LinearRegression', 'Ridge']:
         model = getattr(linear_model, model)(**kwargs)
@@ -107,7 +116,8 @@ def estimate_baseline(Ton, Tamb=273.0, weight=None,
         model = getattr(linear_model, model)(**kwargs)
         model.fit(X, y)
 
-    Tbase = dc.full_like(Ton, X.T*model.coef_)
+    Tbase = np.outer(model.coef_[:, -1], X[:, -1])
+    Tbase = dc.full_like(Ton, Tbase)
     Tbase.attrs['model'] = model
     Tbase.attrs['X'] = X
     Tbase.attrs['y'] = y
@@ -115,9 +125,7 @@ def estimate_baseline(Ton, Tamb=273.0, weight=None,
     return Tbase
 
 
-def _calculate_dtau_dpwv(T):
-    freq = np.asarray(T.kidfq)
-
+def _calculate_dtau_dpwv(freq):
     df = fn.read_atm(kind='tau')
     df = df.loc[freq.min()-0.1:freq.max()+0.1].T
 
