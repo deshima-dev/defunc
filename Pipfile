@@ -30,6 +30,6 @@ python_version = "3.6"
 
 [scripts]
 ipython = "ipython"
-jupyter = "jupyter lab ${HOME}"
+jupyter = "jupyter notebook ${HOME}"
 configure = "etc/configure"
 distribute = "etc/distribute"
