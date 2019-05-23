@@ -8,7 +8,6 @@ ipython = "*"
 jupyter = "*"
 twine = "*"
 jupyterthemes = "*"
-jupyterlab = "*"
 
 [packages]
 numpy = "*"
@@ -20,8 +19,6 @@ matplotlib = "*"
 scikit-learn = "*"
 tqdm = "*"
 pyyaml = "*"
-aplpy = "*"
-pyregion = "*"
 decode = "*"
 fmflow = "*"
 dask = {extras = ["complete"],version = "*"}
@@ -31,7 +28,7 @@ python_version = "3.6.8"
 
 [scripts]
 ipython = "ipython"
-jupyter = "jupyter notebook ${HOME}"
+jupyter = "jupyter notebook"
 distribute = """
 bash -c 'python setup.py sdist
 twine upload dist/$(python setup.py --fullname).tar.gz'
