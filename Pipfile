@@ -7,6 +7,8 @@ verify_ssl = true
 ipython = "*"
 jupyter = "*"
 twine = "*"
+jupyterthemes = "*"
+jupyterlab = "*"
 
 [packages]
 numpy = "*"
@@ -22,14 +24,15 @@ aplpy = "*"
 pyregion = "*"
 decode = "*"
 fmflow = "*"
-jupyterlab = "*"
 dask = {extras = ["complete"],version = "*"}
 
 [requires]
-python_version = "3.6"
+python_version = "3.6.8"
 
 [scripts]
 ipython = "ipython"
 jupyter = "jupyter notebook ${HOME}"
-configure = "etc/configure"
-distribute = "etc/distribute"
+distribute = """
+bash -c 'python setup.py sdist
+twine upload dist/$(python setup.py --fullname).tar.gz'
+"""
