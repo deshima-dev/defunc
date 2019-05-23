@@ -1,9 +1,8 @@
 # User-defined
-/.vscode
-/.ipython/profile_default/*
-!/.ipython/profile_default/startup
-!/.ipython/profile_default/ipython_config.py
-!/.ipython/profile_default/ipython_kernel_config.py
+.ipython
+.jupyter
+.matplotlib
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
