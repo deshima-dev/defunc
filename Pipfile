@@ -21,7 +21,6 @@ tqdm = "*"
 pyyaml = "*"
 decode = "*"
 fmflow = "*"
-dask = {extras = ["complete"],version = "*"}
 
 [requires]
 python_version = "3.6.8"
