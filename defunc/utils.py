@@ -33,9 +33,6 @@ import xarray as xr
 import pandas as pd
 import defunc as fn
 import astropy.units as u
-if 'ipykernel' in sys.modules:
-    from tqdm import tqdm_notebook as tqdm
-else:
     from tqdm import tqdm
 
 
