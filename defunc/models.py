@@ -92,13 +92,18 @@ def estimate_baseline(Ton, Tamb=273.0, order=0, weight=None,
         Tbase (xarray.DataArray): De:code array of estimated baseline.
 
     """
-    freq = np.asarray(Ton.kidfq)
-    slope = _calculate_dtau_dpwv(freq)
+    freq = np.asarray(Ton.kidfq).copy()
+    slope = fn.models._calculate_dtau_dpwv(freq)
+    freq -= np.median(freq)
+    N_freq = len(freq)
+    N_poly = order + 1
 
-    X = np.zeros([len(freq), order+1])
-    X[:, -1] = Tamb*slope
-    for i in range(order):
-        X[:, i] = freq**(i+1)
+    X = np.zeros([N_freq, N_poly+1])
+    X[:, 0] = slope / np.linalg.norm(slope)
+
+    for i in range(N_poly):
+        poly = freq**i
+        X[:, i+1] = poly / np.linalg.norm(poly)
 
     y = Ton.values.T
 
@@ -109,6 +114,9 @@ def estimate_baseline(Ton, Tamb=273.0, order=0, weight=None,
     else:
         weight = np.asarray(weight)
 
+    default_kwargs = {'fit_intercept': False}
+    kwargs = {**default_kwargs, **kwargs}
+
     if model in ['LinearRegression', 'Ridge']:
         model = getattr(linear_model, model)(**kwargs)
         model.fit(X, y, sample_weight=weight)
@@ -116,12 +124,13 @@ def estimate_baseline(Ton, Tamb=273.0, order=0, weight=None,
         model = getattr(linear_model, model)(**kwargs)
         model.fit(X, y)
 
-    Tbase = np.outer(model.coef_[:, -1], X[:, -1])
+    Tbase = np.outer(model.coef_[:, 0], X[:, 0])
     Tbase = dc.full_like(Ton, Tbase)
-    Tbase.attrs['model'] = model
-    Tbase.attrs['X'] = X
-    Tbase.attrs['y'] = y
-    Tbase.attrs['weight'] = weight
+
+    for i in range(N_poly+1):
+        Tbase.coords[f'basis_{i}'] = 'ch', X[:, i]
+        Tbase.coords[f'coeff_{i}'] = 't', model.coef_[:, i]
+
     return Tbase
 
 
