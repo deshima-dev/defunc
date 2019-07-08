@@ -1,3 +1,6 @@
 from setuptools import setup
 
-setup()
+
+# main function
+if __name__ == '__main__':
+    setup()
