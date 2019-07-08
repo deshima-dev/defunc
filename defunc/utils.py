@@ -38,8 +38,8 @@ import astropy.units as u
 
 # module constants
 DIR_DATA = Path(fn.__path__[0]) / 'data'
-DEFAULT_AMC = DIR_DATA / 'ALMA_annual_50.amc'
-DEFAULT_ATM = DIR_DATA / 'ALMA_atm_model.data'
+DEFAULT_AMC = DIR_DATA / 'alma_annual_50.amc'
+DEFAULT_ATM = DIR_DATA / 'alma_atm_model.data'
 DARRAY_DIMS = set(('t', 'ch'))
 DARRAY_COORDS = set(('scanid', 'scantype', 'kidid', 'kidfq', 'kidtp'))
 DCUBE_DIMS = set(('x', 'y', 'ch'))
